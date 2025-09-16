@@ -2,7 +2,6 @@ package com.practice.blog.post.service;
 
 import com.practice.blog.account.entity.Account;
 import com.practice.blog.account.service.AccountService;
-import com.practice.blog.account.service.AccountsService;
 import com.practice.blog.global.exception.BlogException;
 import com.practice.blog.global.exception.ExceptionCode;
 import com.practice.blog.post.domain.Post;

@@ -1,0 +1,147 @@
+Index: blog/src/main/java/com/practice/blog/global/redis/RedisConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>//package com.practice.blog.global.redis;\r\n//\r\n//import org.springframework.cache.annotation.EnableCaching;\r\n//import org.springframework.context.annotation.Bean;\r\n//import org.springframework.context.annotation.Configuration;\r\n//import org.springframework.beans.factory.annotation.Value;\r\n//\r\n//@Configuration\r\n//@EnableCaching // 캐싱 기능 활성화\r\n//public class RedisConfig {\r\n//\r\n//\r\n//}
+===================================================================
+diff --git a/blog/src/main/java/com/practice/blog/global/redis/RedisConfig.java b/blog/src/main/java/com/practice/blog/global/redis/RedisConfig.java
+--- a/blog/src/main/java/com/practice/blog/global/redis/RedisConfig.java	(revision 3db2870b218c1f2bf678cb84723d81bb4ce4ddb6)
++++ b/blog/src/main/java/com/practice/blog/global/redis/RedisConfig.java	(date 1758020093543)
+@@ -1,13 +1,37 @@
+-//package com.practice.blog.global.redis;
+-//
+-//import org.springframework.cache.annotation.EnableCaching;
+-//import org.springframework.context.annotation.Bean;
+-//import org.springframework.context.annotation.Configuration;
+-//import org.springframework.beans.factory.annotation.Value;
+-//
+-//@Configuration
+-//@EnableCaching // 캐싱 기능 활성화
+-//public class RedisConfig {
+-//
+-//
+-//}
+\ No newline at end of file
++package com.practice.blog.global.redis;
++
++import org.springframework.cache.annotation.EnableCaching;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.data.redis.connection.RedisConnectionFactory;
++import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
++import org.springframework.data.redis.core.RedisTemplate;
++import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
++import org.springframework.data.redis.serializer.StringRedisSerializer;
++
++@Configuration
++@EnableCaching // 캐싱 기능 활성화
++public class RedisConfig{
++
++    @Value("${spring.data.redis.host}")
++    private String host;
++
++    @Value("${spring.data.redis.port}")
++    private int port;
++
++    @Bean
++    public RedisConnectionFactory redisConnectionFactory() {
++        return new LettuceConnectionFactory(host, port);
++    }
++
++    @Bean
++    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory){
++        RedisTemplate<String,Object> template = new RedisTemplate<>();
++        template.setConnectionFactory(redisConnectionFactory);
++        template.setKeySerializer(new StringRedisSerializer());
++        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
++
++        return template;
++    }
++}
+\ No newline at end of file
+Index: blog/src/main/java/com/practice/blog/account/service/AccountService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.practice.blog.account.service;\r\n\r\nimport com.practice.blog.account.dto.response.AccountResponseDto;\r\nimport com.practice.blog.account.dto.response.CreateAccountResponseDto;\r\nimport com.practice.blog.account.dto.request.BioUpdateRequestDto;\r\nimport com.practice.blog.account.dto.request.CreateAccountRequestDto;\r\nimport com.practice.blog.account.entity.Account;\r\nimport com.practice.blog.account.entity.AccountStatus;\r\nimport com.practice.blog.account.repository.AccountsRepository;\r\n//import com.practice.blog.account.entity.AccountDocument;\r\n//import com.practice.blog.account.repository.AccountDocumentRepository;\r\n\r\nimport com.practice.blog.global.exception.BlogException;\r\nimport com.practice.blog.global.exception.ExceptionCode;\r\nimport lombok.RequiredArgsConstructor;\r\n//import jakarta.annotation.PostConstruct;\r\n\r\n//import org.springframework.data.redis.core.HashOperations;\r\n//import org.springframework.data.redis.core.RedisTemplate;\r\nimport org.springframework.stereotype.Service;\r\nimport org.springframework.transaction.annotation.Transactional;\r\n\r\n//import java.util.Map;\r\n//import java.util.concurrent.TimeUnit;\r\n\r\n@Service\r\n@RequiredArgsConstructor\r\n\r\npublic class AccountService {\r\n\r\n    private final AccountsRepository accountsRepository;\r\n\r\n\r\n\r\n    // 초기화\r\n\r\n\r\n\r\n    // 회원 생성\r\n    @Transactional\r\n    public CreateAccountResponseDto createAccount(CreateAccountRequestDto requestDto) {\r\n        if(accountsRepository.existsByEmail(requestDto.getEmail())) {\r\n            throw new IllegalArgumentException(\"Email already exists\");\r\n        }\r\n        Account account = requestDto.toEntity();\r\n        Account savedAccount = accountsRepository.save(account);\r\n        return CreateAccountResponseDto.from(savedAccount);\r\n    }\r\n\r\n\r\n\r\n    // 회원 수정 (bio, nickname)\r\n    @Transactional\r\n    public AccountResponseDto updateAccount(Long accountId, BioUpdateRequestDto requestDto) {\r\n        Account account = findByAccountId(accountId);\r\n        account.updateBio(requestDto.getBio());\r\n        account.updateNickname(requestDto.getNickname());\r\n        return AccountResponseDto.from(account);\r\n    }\r\n\r\n\r\n    // 회원 물리적 삭제\r\n    @Transactional\r\n    public void physicalDeleteAccount(Long accountId) {\r\n        Account account = findByAccountId(accountId);\r\n        accountsRepository.delete(account);\r\n    }\r\n\r\n    // Redis에서 ID로 이메일 조회\r\n\r\n\r\n\r\n    // MongoDB에서 ID로 닉네임 조회\r\n\r\n\r\n    /*----------------------------------------------------*/\r\n\r\n    // 회원 논리적 삭제 (status 변경)\r\n    @Transactional\r\n    public void deleteAccount(Long accountId) {\r\n        Account account = findByAccountId(accountId);\r\n        account.changeStatus(AccountStatus.DEACTIVATED);\r\n    }\r\n\r\n    // 회원 단건 조회\r\n    @Transactional(readOnly=true)\r\n    public AccountResponseDto getAccount(Long accountId) {\r\n        Account account = findByAccountId(accountId);\r\n        return AccountResponseDto.from(account);\r\n    }\r\n\r\n    @Transactional(readOnly=true)\r\n    public Account findByAccountId(Long accountId) {\r\n        return accountsRepository.findByAccountId(accountId)\r\n                .orElseThrow(()-> new BlogException(ExceptionCode.ACCOUNT_NOT_FOUND));\r\n    }\r\n\r\n    @Transactional(readOnly = true)\r\n    public Account findByEmail(String email){\r\n        return accountsRepository.findByEmail(email)\r\n                .orElseThrow(()-> new BlogException(ExceptionCode.ACCOUNT_NOT_FOUND));\r\n    }\r\n\r\n    // 이메일 중복 체크\r\n    @Transactional(readOnly = true)\r\n    public boolean existsByEmail(String email) {\r\n        return accountsRepository.existsByEmail(email);\r\n    }\r\n}
+===================================================================
+diff --git a/blog/src/main/java/com/practice/blog/account/service/AccountService.java b/blog/src/main/java/com/practice/blog/account/service/AccountService.java
+--- a/blog/src/main/java/com/practice/blog/account/service/AccountService.java	(revision 3db2870b218c1f2bf678cb84723d81bb4ce4ddb6)
++++ b/blog/src/main/java/com/practice/blog/account/service/AccountService.java	(date 1758020446891)
+@@ -12,14 +12,20 @@
+ 
+ import com.practice.blog.global.exception.BlogException;
+ import com.practice.blog.global.exception.ExceptionCode;
++import jakarta.annotation.PostConstruct;
+ import lombok.RequiredArgsConstructor;
+ //import jakarta.annotation.PostConstruct;
+ 
+ //import org.springframework.data.redis.core.HashOperations;
+ //import org.springframework.data.redis.core.RedisTemplate;
++import org.springframework.data.redis.core.HashOperations;
++import org.springframework.data.redis.core.RedisTemplate;
+ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
++import java.util.Map;
++import java.util.concurrent.TimeUnit;
++
+ //import java.util.Map;
+ //import java.util.concurrent.TimeUnit;
+ 
+@@ -30,10 +36,14 @@
+ 
+     private final AccountsRepository accountsRepository;
+ 
+-
++    private final RedisTemplate<String, Object> redisTemplate;
++    private HashOperations<String, String, Object> hashOperations;
++    private static final String ACCOUNT_CACHE_KEY="Account:";
+ 
+-    // 초기화
+-
++    @PostConstruct
++    public void init(){
++        this.hashOperations = redisTemplate.opsForHash();
++    }
+ 
+ 
+     // 회원 생성
+@@ -44,7 +54,14 @@
+         }
+         Account account = requestDto.toEntity();
+         Account savedAccount = accountsRepository.save(account);
++
++        String redisKey = ACCOUNT_CACHE_KEY + savedAccount.getAccountId();
++        hashOperations.put(redisKey, "email", requestDto.getEmail());
++        hashOperations.put(redisKey, "nickname", requestDto.getNickname());
++
++        redisTemplate.expire(redisKey,30, TimeUnit.MINUTES);
+         return CreateAccountResponseDto.from(savedAccount);
++
+     }
+ 
+ 
+@@ -67,7 +84,23 @@
+     }
+ 
+     // Redis에서 ID로 이메일 조회
++    @Transactional
++    public String findEmailByIdFromRedis(Long id){
++        String redisKey = ACCOUNT_CACHE_KEY + id;
++
++        Map<String, Object> hashEntries = hashOperations.entries(redisKey);
++        if(hashEntries.isEmpty()){
++            Account account = findByAccountId(id);
+ 
++            hashOperations.put(redisKey, "email", account.getEmail());
++            hashOperations.put(redisKey, "nickname", account.getNickname());
++            redisTemplate.expire(redisKey,30, TimeUnit.MINUTES);
++
++            return account.getEmail();
++        }
++        String email = (String) hashEntries.get("email");
++        return email;
++    }
+ 
+ 
+     // MongoDB에서 ID로 닉네임 조회

@@ -13,4 +13,6 @@ public interface AccountsRepository extends JpaRepository<Account, Long> {
     // 회원 ID로 조회
     Optional<Account> findByAccountId(Long accountId);
 
+    // 이메일로 조회
+    Optional<Account> findByEmail(String email);
 }

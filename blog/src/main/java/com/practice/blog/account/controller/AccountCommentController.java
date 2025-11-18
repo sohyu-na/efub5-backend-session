@@ -1,7 +1,6 @@
 package com.practice.blog.account.controller;
 
 import com.practice.blog.account.dto.response.AccountCommentResponse;
-import com.practice.blog.account.service.AccountsService;
 import com.practice.blog.comment.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

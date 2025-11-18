@@ -22,30 +22,27 @@ public class Post extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 제목
     private String title;
-    // 내용
+
     private String content;
-    // 글쓴이
+
     @ManyToOne(fetch = FetchType.LAZY)
     private Account writer;
-    // 조회수
+
     private Long viewCount;
 
     @OneToMany(mappedBy="post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> commentList = new ArrayList<>();
-    // 빌더
+
     @Builder
-    public Post(String title, String content, Account writer){
+    public Post(String title, String content, Account writer) {
         this.title = title;
         this.content = content;
         this.writer = writer;
         this.viewCount = 0L;
     }
-    // 조회수 증가
 
-    // 게시물 내용 수정
-    public void changeContent(String newContent){
+    public void changeContent(String newContent) {
         this.content = newContent;
     }
 }

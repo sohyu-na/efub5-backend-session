@@ -4,7 +4,7 @@ import com.practice.blog.account.dto.response.AccountResponseDto;
 import com.practice.blog.account.dto.response.CreateAccountResponseDto;
 import com.practice.blog.account.dto.request.BioUpdateRequestDto;
 import com.practice.blog.account.dto.request.CreateAccountRequestDto;
-import com.practice.blog.account.service.AccountsService;
+import com.practice.blog.account.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,19 +16,19 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AccountController {
 
-    private final AccountsService accountsService;
+    private final AccountService accountService;
 
     // 회원 조회: GET /accounts/{accountId}
     @GetMapping("/{accountId}")
     public ResponseEntity<AccountResponseDto> getAccount(@PathVariable("accountId") Long accountId) {
-        AccountResponseDto responseDto = accountsService.getAccount(accountId);
+        AccountResponseDto responseDto = accountService.getAccount(accountId);
         return ResponseEntity.ok(responseDto);
     }
 
     // 계정 생성 POST /accounts
     @PostMapping
     public ResponseEntity<CreateAccountResponseDto> createAccount(@RequestBody @Valid CreateAccountRequestDto requestDto) {
-        CreateAccountResponseDto responseDto = accountsService.createAccount(requestDto);
+        CreateAccountResponseDto responseDto = accountService.createAccount(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
@@ -36,21 +36,21 @@ public class AccountController {
     @PatchMapping("/profile/{accountId}")
     public ResponseEntity<AccountResponseDto> updateAccount(@PathVariable("accountId") Long accountId,
                                                             @RequestBody @Valid BioUpdateRequestDto requestDto) {
-        AccountResponseDto responseDto = accountsService.updateAccount(accountId, requestDto);
+        AccountResponseDto responseDto = accountService.updateAccount(accountId, requestDto);
         return ResponseEntity.ok(responseDto);
     }
 
     // 계정 논리적 삭제(탈퇴): PATCH /accounts/{accountId}
     @PatchMapping("/{accountId}")
     public ResponseEntity<String> deleteAccount(@PathVariable("accountId") Long accountId) {
-        accountsService.deleteAccount(accountId);  // 상태 변경만 수행
+        accountService.deleteAccount(accountId);  // 상태 변경만 수행
         return ResponseEntity.ok("message : 성공적으로 탈퇴되었습니다.");
     }
 
     // 계정 물리적 삭제: DELETE /accounts/{accountId}
     @DeleteMapping("/{accountId}")
     public ResponseEntity<String> physicalDeleteAccount(@PathVariable("accountId") Long accountId) {
-        accountsService.physicalDeleteAccount(accountId);
+        accountService.physicalDeleteAccount(accountId);
         return ResponseEntity.ok("message : 성공적으로 탈퇴되었습니다.");
     }
 }

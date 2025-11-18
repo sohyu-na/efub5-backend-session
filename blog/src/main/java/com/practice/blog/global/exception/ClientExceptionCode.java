@@ -11,5 +11,18 @@ public enum ClientExceptionCode {
     // Post
     POST_NOT_FOUND,
     POST_CONTENT_INVALID_LENGTH,
-    POST_ACCOUNT_MISMATCH
+    POST_ACCOUNT_MISMATCH,
+
+    // Comment
+    COMMENT_NOT_FOUND,
+    COMMENT_ACCOUNT_MISMATCH,
+
+    // CommentLike
+    LIKE_NOT_FOUND,
+    LIKE_ALREADY_EXISTS,
+
+    // Follow
+    ALREADY_FOLLOWED,
+    FOLLOW_NOT_FOUND
+
 }
